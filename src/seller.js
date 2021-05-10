@@ -12,7 +12,6 @@ class CreateAsset extends React.Component {
       title: 'SuperCoolAsset',
       edition: '1',
       symbol: 'SCA',
-      price: '1',
       note: '',
     };
   }
@@ -52,16 +51,6 @@ class CreateAsset extends React.Component {
           required
         />
 
-        <label>Price</label>
-        <input
-          type="number"
-          min={1}
-          max={5}
-          value={this.state.price}
-          onChange={e => this.setState({price: e.target.price})}
-          required
-        />
-
         <label>Note</label>
         <input
           type="text"
@@ -82,8 +71,26 @@ class CreatingAsset extends React.Component {
   }
 }
 
-class AssetCreated extends React.Component {
+class PublishListing extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {price: '1'};
+  }
 
+  render() {
+    return <form onSubmit={() => this.props.publishPrice(this.state.price)}>
+      <label>Price</label>
+      <input
+        type="number"
+        value={this.state.price}
+        min={1}
+        max={5}
+        onChange={e => this.setState({price: e.target.value})}
+        required
+      />
+      <button>Publish</button>
+    </form>;
+  }
 }
 
 export class Seller extends React.Component {
@@ -124,9 +131,14 @@ export class Seller extends React.Component {
           Deploying Reach app...
         </div>;
 
-      case 'Deployed':
-        return <div>
-        </div>;
+      case 'PublishListing':
+        return <PublishListing {...{
+          asset: this.state.asset,
+          publishPrice: this.publishPrice.bind(this),
+        }} />;
+
+      case 'Published':
+        return <div></div>;
     }
   }
 
@@ -216,6 +228,19 @@ export class Seller extends React.Component {
     const ctc = await account.deploy(backend);
     const ctcInfo = await ctc.getInfo();
 
-    this.setState({ctcInfo, view: 'Deployed'});
+    this.setState({ctc, ctcInfo, view: 'PublishListing'});
+  }
+
+  async publishPrice(price) {
+    const {asset, ctc} = this.state;
+    const atomicPrice = reach.parseCurrency(price);
+
+    // This creates a backend participant with an object that fulfills the necessary interface.
+    await backend.Seller(ctc, {
+      assetId: asset.id,
+      price: atomicPrice,
+    });
+
+    this.setState({view: 'Published'});
   }
 }

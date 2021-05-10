@@ -2,7 +2,8 @@
 'use strict';
 
 const Seller = {
-  getTokenAndPrice: Fun([], Tuple(Token, UInt)),
+  assetId: Token,
+  price: UInt,
 };
 const Buyer = {
   acceptPrice: Fun([UInt], Null),
@@ -17,10 +18,9 @@ export const main = Reach.App(
   [Participant('Seller', Seller), Participant('Buyer', Buyer)],
   (seller, buyer) => {
 
-    // First step is getting the asset id and the requested price
-    // from the seller, rather than hardcoding anything
+    // First step is getting the asset id and the requested price from the seller
     seller.only(() => {
-      const [tokenId, price] = declassify(interact.getTokenAndPrice());
+      const [tokenId, price] = declassify([interact.assetId, interact.price]);
     });
 
     // This publishes the asset and price onto the chain, and it pays
